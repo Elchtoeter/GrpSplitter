@@ -1,5 +1,7 @@
 package model;
 
+import org.zeroturnaround.zip.ZipUtil;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,12 +16,14 @@ public class Model {
 
     private File folder;
     private List<Path> files;
+    private List<Integer> chosenGroups;
     private int entries = 0;
     private final List<List<Path>> grps = new ArrayList<>();
+    private List<Submission> subs;
+    List<List<Path>> chosenSubs = new ArrayList<>();
 
     public void setFolder(File folder) {
         this.folder = folder;
-        System.out.println(folder);
         loadFiles();
     }
 
@@ -51,5 +55,23 @@ public class Model {
 
     public int getEntries() {
         return entries;
+    }
+
+    public void setChosenGroups(List<Integer> chosenGroups) {
+        this.chosenGroups = chosenGroups;
+    }
+
+    public boolean extractAndMove() {
+        for (Integer chosenGroup : chosenGroups) {
+            chosenSubs.add(grps.get(chosenGroup));
+        }
+        List<Submission> cs = chosenSubs.stream().flatMap(List::stream).map(Submission::apply).collect(Collectors.toList());
+        for (Submission c : cs) {
+            File old = c.getFile().toFile();
+            String newFilename = c.getName() + " " + c.getFamilyName() + " k" + c.getMtrklNr() +".zip";
+            File newF = new File(newFilename);
+            old.renameTo(newF);
+        }
+        return false;
     }
 }

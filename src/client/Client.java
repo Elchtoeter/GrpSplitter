@@ -22,6 +22,8 @@ public class Client {
     private static final JScrollPane scroll = new JScrollPane(textArea);
     private static final JTextField grp = new JFormattedTextField(textDefault);
     private static final JFileChooser fc = new JFileChooser();
+    private static final JButton button = new JButton("Choose Folder");
+    private static final JButton doneButton = new JButton("Done");
     private static List<Integer> nrs;
 
     public static void main(String[] args) {
@@ -30,11 +32,16 @@ public class Client {
 
     private static void createGui() {
         frame.setResizable(false);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.add(rootPanel);
         rootPanel.add(panel, BorderLayout.NORTH);
         rootPanel.add(scroll, BorderLayout.CENTER);
-        JButton button = new JButton("Choose Folder");
+        doneButton.setEnabled(false);
+        rootPanel.add(doneButton,BorderLayout.SOUTH);
+        doneButton.addActionListener(l->{
+            boolean done = model.extractAndMove();
+            if(done) { System.exit(1);}
+        });
         button.addActionListener(e -> {
             fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             fc.setAcceptAllFileFilterUsed(false);
@@ -59,15 +66,19 @@ public class Client {
             try {
                 nrs = Arrays.stream(text.split(",")).map(Integer::parseInt).collect(Collectors.toList());
             } catch (NumberFormatException e) {
+                doneButton.setEnabled(false);
                 showError();
                 return;
             }
             nrs.sort(Comparator.naturalOrder());
             if (nrs.stream().anyMatch(i -> i < 1 || i > 6)) {
+                doneButton.setEnabled(false);
                 showError();
                 nrs = null;
                 return;
             }
+            model.setChosenGroups(nrs);
+            doneButton.setEnabled(true);
             updateText();
         });
         panel.add(grp);
